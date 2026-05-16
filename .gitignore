@@ -1,0 +1,12 @@
+node_modules
+.next
+.cache
+dist
+coverage
+.turbo
+.env
+.env.local
+tmp
+*.log
+bin
+*.tsbuildinfo
