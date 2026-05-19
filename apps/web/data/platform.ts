@@ -5,7 +5,14 @@ export const references = [
   { title: "CSS Properties", description: "Layout, color, typography, animation, transforms, responsive rules, and browser behavior.", count: "248 entries" },
   { title: "JavaScript Methods", description: "Array, object, string, date, promise, DOM, fetch, storage, and event APIs.", count: "186 entries" },
   { title: "SQL Commands", description: "Queries, joins, indexes, constraints, transactions, aggregation, and schema design.", count: "64 entries" },
-  { title: "API Docs", description: "HTTP status codes, REST patterns, authentication, rate limits, payloads, and pagination.", count: "42 guides" }
+  { title: "API Docs", description: "HTTP status codes, REST patterns, authentication, rate limits, payloads, and pagination.", count: "42 guides" },
+  { title: "React Patterns", description: "Components, props, hooks, forms, effects, routing, state, and performance notes.", count: "76 guides" },
+  { title: "Python Standard Library", description: "Files, JSON, dates, HTTP, testing, automation, virtual environments, and packaging.", count: "94 notes" },
+  { title: "Go Backend Recipes", description: "Handlers, middleware, database access, testing, context, errors, and deployment.", count: "58 recipes" },
+  { title: "Data Science Cheatsheets", description: "NumPy, Pandas, plotting, cleaning, grouping, modeling, and notebook workflows.", count: "71 sheets" },
+  { title: "Security Checklist", description: "Passwords, sessions, headers, validation, rate limits, CORS, logging, and backups.", count: "36 checks" },
+  { title: "Git Commands", description: "Branching, commits, diffs, rebases, remotes, pull requests, and release tags.", count: "52 commands" },
+  { title: "Interview Prep", description: "DSA patterns, frontend tasks, backend design, debugging drills, and portfolio review.", count: "44 drills" }
 ];
 
 export const exerciseTracks = [

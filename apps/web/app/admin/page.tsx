@@ -1,4 +1,5 @@
 import { MetricCard } from "@/components/cards/MetricCard";
+import { AdminCourseEditor } from "@/components/admin/AdminCourseEditor";
 import { adminModules } from "@/data/platform";
 import { pageMetadata } from "@/lib/seo";
 
@@ -14,6 +15,7 @@ export default function AdminPage() {
           <MetricCard key={module.title} {...module} />
         ))}
       </div>
+      <AdminCourseEditor />
     </div>
   );
 }

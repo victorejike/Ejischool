@@ -8,7 +8,7 @@ type AppShellProps = {
 
 export function AppShell({ children }: AppShellProps) {
   return (
-    <div className="min-h-screen bg-brand-ink text-white">
+    <div className="min-h-screen bg-[var(--app-bg)] text-[var(--text-main)]">
       <SiteHeader />
       <main>{children}</main>
       <SiteFooter />

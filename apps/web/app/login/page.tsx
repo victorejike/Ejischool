@@ -1,4 +1,4 @@
-import { Github, Mail } from "lucide-react";
+import { LoginClient } from "@/components/auth/LoginClient";
 import { pageMetadata } from "@/lib/seo";
 
 export const metadata = pageMetadata("Sign In", "Sign in to EJISCHOOL to track progress, save playground work, and earn certificates.", "/login");
@@ -18,30 +18,7 @@ export default function LoginPage() {
           ))}
         </div>
       </section>
-      <section className="rounded-lg border border-white/10 bg-white/[0.055] p-6 shadow-glow">
-        <h2 className="text-2xl font-black">Sign in</h2>
-        <form className="mt-6 grid gap-4">
-          <label className="grid gap-2 text-sm font-semibold text-white/80">
-            Email
-            <input className="focus-ring rounded-md border border-white/10 bg-black/20 px-3 py-3 text-white" type="email" placeholder="you@example.com" />
-          </label>
-          <label className="grid gap-2 text-sm font-semibold text-white/80">
-            Password
-            <input className="focus-ring rounded-md border border-white/10 bg-black/20 px-3 py-3 text-white" type="password" placeholder="••••••••" />
-          </label>
-          <button className="focus-ring rounded-md bg-brand-cyan px-4 py-3 text-sm font-black text-brand-ink" type="button">Sign In</button>
-        </form>
-        <div className="mt-5 grid gap-3">
-          <button className="focus-ring inline-flex items-center justify-center gap-2 rounded-md border border-white/10 px-4 py-3 text-sm font-bold" type="button">
-            <Github size={18} aria-hidden />
-            Continue with GitHub
-          </button>
-          <button className="focus-ring inline-flex items-center justify-center gap-2 rounded-md border border-white/10 px-4 py-3 text-sm font-bold" type="button">
-            <Mail size={18} aria-hidden />
-            Send Magic Link
-          </button>
-        </div>
-      </section>
+      <LoginClient />
     </div>
   );
 }

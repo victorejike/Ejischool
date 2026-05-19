@@ -1,7 +1,9 @@
 "use client";
 
 import { Play, RotateCcw } from "lucide-react";
+import { useSearchParams } from "next/navigation";
 import { useMemo, useState } from "react";
+import { courseCatalog, courseMap } from "@/data/courseCatalog";
 
 type Mode = "html" | "javascript";
 
@@ -32,17 +34,35 @@ skills.forEach((skill, index) => {
 });`;
 
 export function PlaygroundClient() {
-  const [mode, setMode] = useState<Mode>("html");
-  const [code, setCode] = useState(starter);
-  const [preview, setPreview] = useState(starter);
+  const searchParams = useSearchParams();
+  const requestedCourse = courseMap.get(searchParams.get("course") ?? "") ?? courseCatalog[0];
+  const initialMode = requestedCourse.playgroundMode;
+  const initialCode = initialMode === "html" ? starterForCourse(requestedCourse.slug) : javascriptForCourse(requestedCourse.label);
+  const [mode, setMode] = useState<Mode>(initialMode);
+  const [selectedCourse, setSelectedCourse] = useState(requestedCourse.slug);
+  const [code, setCode] = useState(initialCode);
+  const [preview, setPreview] = useState(initialMode === "html" ? initialCode : starter);
   const [consoleOutput, setConsoleOutput] = useState("Output will appear here.");
-  const activeStarter = mode === "html" ? starter : javascriptStarter;
+  const activeCourse = courseMap.get(selectedCourse) ?? courseCatalog[0];
+  const activeStarter = mode === "html" ? starterForCourse(activeCourse.slug) : javascriptForCourse(activeCourse.label);
   const canReset = useMemo(() => code !== activeStarter || preview !== starter || consoleOutput !== "Output will appear here.", [activeStarter, code, consoleOutput, preview]);
 
   function switchMode(nextMode: Mode) {
     setMode(nextMode);
-    setCode(nextMode === "html" ? starter : javascriptStarter);
-    setPreview(starter);
+    const nextStarter = nextMode === "html" ? starterForCourse(activeCourse.slug) : javascriptForCourse(activeCourse.label);
+    setCode(nextStarter);
+    setPreview(nextMode === "html" ? nextStarter : starter);
+    setConsoleOutput("Output will appear here.");
+  }
+
+  function switchCourse(slug: string) {
+    const nextCourse = courseMap.get(slug) ?? courseCatalog[0];
+    const nextMode = nextCourse.playgroundMode;
+    const nextStarter = nextMode === "html" ? starterForCourse(nextCourse.slug) : javascriptForCourse(nextCourse.label);
+    setSelectedCourse(nextCourse.slug);
+    setMode(nextMode);
+    setCode(nextStarter);
+    setPreview(nextMode === "html" ? nextStarter : starter);
     setConsoleOutput("Output will appear here.");
   }
 
@@ -72,7 +92,19 @@ export function PlaygroundClient() {
         <div className="flex items-center justify-between border-b border-white/10 px-4 py-3">
           <div>
             <h1 className="text-base font-bold">Code Playground</h1>
-            <div className="mt-2 flex gap-1">
+            <div className="mt-2 flex flex-wrap gap-2">
+              <select
+                className="focus-ring h-8 rounded-md border border-white/10 bg-black/20 px-2 text-xs font-bold text-white outline-none"
+                value={selectedCourse}
+                onChange={(event) => switchCourse(event.target.value)}
+                aria-label="Choose playground course"
+              >
+                {courseCatalog.map((course) => (
+                  <option key={course.slug} value={course.slug}>
+                    {course.label}
+                  </option>
+                ))}
+              </select>
               {(["html", "javascript"] as const).map((item) => (
                 <button
                   key={item}
@@ -93,7 +125,7 @@ export function PlaygroundClient() {
               disabled={!canReset}
               onClick={() => {
                 setCode(activeStarter);
-                setPreview(starter);
+                setPreview(mode === "html" ? activeStarter : starter);
                 setConsoleOutput("Output will appear here.");
               }}
             >
@@ -127,4 +159,53 @@ export function PlaygroundClient() {
       </section>
     </div>
   );
+}
+
+function starterForCourse(slug: string) {
+  const course = courseMap.get(slug);
+  if (!course) {
+    return starter;
+  }
+
+  if (["html", "how-to", "bootstrap"].includes(course.slug)) {
+    return course.starterCode;
+  }
+
+  if (["css", "w3css", "sass"].includes(course.slug)) {
+    return `<!doctype html>
+<html>
+  <head>
+    <style>
+${course.starterCode.split("\n").map((line) => `      ${line}`).join("\n")}
+    </style>
+  </head>
+  <body>
+    <section class="lesson-card">
+      <h1>${course.label} Playground</h1>
+      <p>Edit the styles and run the preview.</p>
+    </section>
+  </body>
+</html>`;
+  }
+
+  return `<!doctype html>
+<html>
+  <body>
+    <h1>${course.label} Playground</h1>
+    <pre>${escapeHtml(course.starterCode)}</pre>
+  </body>
+</html>`;
+}
+
+function javascriptForCourse(label: string) {
+  return `const course = "${label}";
+const topics = ["introduction", "syntax", "patterns", "project"];
+
+topics.forEach((topic, index) => {
+  console.log(\`\${index + 1}. Practice \${course} \${topic}\`);
+});`;
+}
+
+function escapeHtml(value: string) {
+  return value.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
 }

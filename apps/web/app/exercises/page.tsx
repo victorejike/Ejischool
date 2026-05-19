@@ -1,4 +1,5 @@
 import { CheckCircle2 } from "lucide-react";
+import { ExerciseRunner } from "@/components/exercises/ExerciseRunner";
 import { PageHero } from "@/components/layout/PageHero";
 import { exerciseTracks } from "@/data/platform";
 import { pageMetadata } from "@/lib/seo";
@@ -23,6 +24,7 @@ export default function ExercisesPage() {
           </article>
         ))}
       </div>
+      <ExerciseRunner />
       </div>
     </>
   );

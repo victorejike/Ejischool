@@ -8,6 +8,28 @@
   --surface: #071115;
   --panel: #101b21;
   --line: rgba(217, 251, 255, 0.12);
+  --app-bg: #f6fcff;
+  --header-bg: rgba(246, 252, 255, 0.92);
+  --coursebar-bg: #071a33;
+  --coursebar-text: #f8fdff;
+  --panel-bg: #ffffff;
+  --control-bg: #ffffff;
+  --text-main: #071a33;
+  --text-muted: rgba(7, 26, 51, 0.68);
+  --border-soft: rgba(7, 26, 51, 0.12);
+}
+
+html[data-theme="dark"] {
+  color-scheme: dark;
+  --app-bg: #071115;
+  --header-bg: rgba(7, 17, 21, 0.92);
+  --coursebar-bg: #0d2438;
+  --coursebar-text: #e9fbff;
+  --panel-bg: #0b171d;
+  --control-bg: rgba(255, 255, 255, 0.055);
+  --text-main: #f8fdff;
+  --text-muted: rgba(248, 253, 255, 0.66);
+  --border-soft: rgba(217, 251, 255, 0.14);
 }
 
 * {
@@ -20,8 +42,8 @@ html {
 
 body {
   margin: 0;
-  background: #f6fcff;
-  color: #071a33;
+  background: var(--app-bg);
+  color: var(--text-main);
   font-family: Arial, Helvetica, sans-serif;
   overflow-x: hidden;
 }
@@ -47,4 +69,46 @@ pre {
 
 .focus-ring:focus-visible {
   outline-color: var(--brand-cyan);
+}
+
+html[data-theme="light"] .bg-brand-ink {
+  background-color: #f6fcff;
+}
+
+html[data-theme="light"] .bg-brand-panel,
+html[data-theme="light"] .bg-\[\#071014\],
+html[data-theme="light"] .bg-\[\#071115\],
+html[data-theme="light"] .bg-\[\#101B21\] {
+  background-color: #ffffff;
+}
+
+html[data-theme="light"] .text-white,
+html[data-theme="light"] .text-white\/55,
+html[data-theme="light"] .text-white\/58,
+html[data-theme="light"] .text-white\/62,
+html[data-theme="light"] .text-white\/64,
+html[data-theme="light"] .text-white\/65,
+html[data-theme="light"] .text-white\/68,
+html[data-theme="light"] .text-white\/70,
+html[data-theme="light"] .text-white\/72,
+html[data-theme="light"] .text-white\/75,
+html[data-theme="light"] .text-white\/78,
+html[data-theme="light"] .text-white\/80 {
+  color: #071a33;
+}
+
+html[data-theme="light"] .border-white\/10 {
+  border-color: rgba(7, 26, 51, 0.12);
+}
+
+html[data-theme="light"] .bg-white\/\[0\.025\],
+html[data-theme="light"] .bg-white\/\[0\.035\],
+html[data-theme="light"] .bg-white\/\[0\.045\],
+html[data-theme="light"] .bg-white\/10 {
+  background-color: rgba(255, 255, 255, 0.74);
+}
+
+html[data-theme="dark"] .hover\:bg-\[\#e9fbff\]:hover,
+html[data-theme="dark"] .hover\:bg-\[\#effaff\]:hover {
+  background-color: rgba(17, 215, 245, 0.12);
 }

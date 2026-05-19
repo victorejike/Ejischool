@@ -27,6 +27,19 @@ cd services/api
 go run ./cmd/server
 ```
 
+Run the full database-backed stack:
+
+```bash
+cd infrastructure/docker
+docker compose up --build
+```
+
+The API uses `DATABASE_URL` for PostgreSQL. When it is set, sign up/sign in, admin course edits, course reads, and live server-sent events use the database. Docker Compose wires this automatically with:
+
+```bash
+postgres://ejischool:ejischool@postgres:5432/ejischool?sslmode=disable
+```
+
 Default local URLs:
 
 - Web: `http://localhost:3000`
