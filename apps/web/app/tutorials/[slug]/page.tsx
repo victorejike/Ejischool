@@ -31,10 +31,10 @@ export default function TutorialPage({ params }: TutorialPageProps) {
   }
 
   return (
-    <div className="grid lg:grid-cols-[17rem_minmax(0,1fr)] xl:grid-cols-[17rem_minmax(0,1fr)_20rem]">
-      <TutorialSidebar />
+    <div className="grid min-w-0 lg:grid-cols-[15rem_minmax(0,1fr)] xl:h-[calc(100vh-7.5rem)] xl:grid-cols-[15rem_minmax(0,1fr)_15.5rem] xl:overflow-hidden">
+      <TutorialSidebar tutorial={tutorial} />
       <TutorialContent tutorial={tutorial} />
-      <RightRail />
+      <RightRail tutorial={tutorial} />
     </div>
   );
 }

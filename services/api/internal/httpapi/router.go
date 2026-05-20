@@ -58,6 +58,7 @@ func NewRouter(cfg config.Config) http.Handler {
 	mux.HandleFunc("GET /v1/events", app.eventsStream)
 	mux.HandleFunc("POST /v1/auth/signup", app.signup)
 	mux.HandleFunc("POST /v1/auth/login", app.login)
+	mux.HandleFunc("POST /v1/ai/tutor", app.aiTutor)
 	mux.HandleFunc("POST /v1/playground/run", app.runCode)
 	mux.HandleFunc("POST /v1/exercises/submit", app.submitExercise)
 
@@ -274,6 +275,70 @@ func (a *api) submitExercise(w http.ResponseWriter, r *http.Request) {
 	}
 	a.events.Broadcast(fmt.Sprintf(`{"type":"exercise.submitted","courseSlug":%q,"status":%q,"score":%.0f}`, req.CourseSlug, result.Status, result.Score))
 	writeJSON(w, http.StatusOK, result)
+}
+
+type aiTutorRequest struct {
+	CourseSlug      string `json:"courseSlug"`
+	CourseTitle     string `json:"courseTitle"`
+	CurrentTopic    string `json:"currentTopic"`
+	Question        string `json:"question"`
+	SecondsSpent    int    `json:"secondsSpent"`
+	CompletedTopics int    `json:"completedTopics"`
+	TotalTopics     int    `json:"totalTopics"`
+}
+
+type aiTutorResponse struct {
+	Answer     string `json:"answer"`
+	NextAction string `json:"nextAction"`
+}
+
+func (a *api) aiTutor(w http.ResponseWriter, r *http.Request) {
+	var req aiTutorRequest
+	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
+		writeError(w, http.StatusBadRequest, "invalid json body")
+		return
+	}
+
+	question := strings.TrimSpace(req.Question)
+	if question == "" {
+		writeError(w, http.StatusBadRequest, "question is required")
+		return
+	}
+
+	courseTitle := strings.TrimSpace(req.CourseTitle)
+	if courseTitle == "" {
+		courseTitle = "this course"
+	}
+	topic := strings.TrimSpace(req.CurrentTopic)
+	if topic == "" {
+		topic = courseTitle
+	}
+
+	minutes := req.SecondsSpent / 60
+	seconds := req.SecondsSpent % 60
+	progress := fmt.Sprintf("I can see you have spent %dm %02ds here and reached %d/%d topics.", minutes, seconds, req.CompletedTopics, req.TotalTopics)
+	if req.TotalTopics <= 0 {
+		progress = "I am using your current lesson context to keep the guidance focused."
+	}
+
+	lowerQuestion := strings.ToLower(question)
+	answer := fmt.Sprintf("For %s in %s, start with the smallest version of the idea. %s", topic, courseTitle, progress)
+	nextAction := "Write one small answer or code change, then ask me to check the result."
+
+	switch {
+	case strings.Contains(lowerQuestion, "stuck") || strings.Contains(lowerQuestion, "confus") || strings.Contains(lowerQuestion, "error"):
+		answer = fmt.Sprintf("You seem stuck around %s. %s First say what you expected, then compare it with what happened. Check one line or one concept at a time so the problem becomes visible.", topic, progress)
+		nextAction = "Tell me the exact error, output, or sentence that does not make sense."
+	case strings.Contains(lowerQuestion, "example") || strings.Contains(lowerQuestion, "sample"):
+		answer = fmt.Sprintf("A useful %s example should have one input, one action, and one result. %s Keep it tiny first, then add a second case after the first one works.", topic, progress)
+		nextAction = "Create the tiniest example you can, then extend it by one detail."
+	case strings.Contains(lowerQuestion, "explain") || strings.Contains(lowerQuestion, "what is") || strings.Contains(lowerQuestion, "why"):
+		answer = fmt.Sprintf("%s is best learned by separating the concept from the syntax. %s Name the concept in plain English, then point to the keyword, tag, selector, or command that performs it.", topic, progress)
+		nextAction = "Rewrite the idea in your own words in one sentence."
+	}
+
+	a.events.Broadcast(fmt.Sprintf(`{"type":"ai.tutor","courseSlug":%q,"topic":%q}`, req.CourseSlug, topic))
+	writeJSON(w, http.StatusOK, aiTutorResponse{Answer: answer, NextAction: nextAction})
 }
 
 func (a *api) eventsStream(w http.ResponseWriter, r *http.Request) {

@@ -34,5 +34,9 @@ export const tutorials: Tutorial[] = courseCatalog.map((course) => ({
   }))
 }));
 
+export function tutorialSectionId(title: string) {
+  return title.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/(^-|-$)/g, "");
+}
+
 export const tutorialMap = new Map(tutorials.map((tutorial) => [tutorial.slug, tutorial]));
 export { courseCatalog, courseMap };

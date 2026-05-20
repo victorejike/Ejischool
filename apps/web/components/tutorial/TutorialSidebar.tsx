@@ -1,15 +1,23 @@
 import Link from "next/link";
-import { tutorials } from "@/data/tutorials";
+import type { Tutorial } from "@/data/tutorials";
+import { tutorialSectionId } from "@/data/tutorials";
 
-export function TutorialSidebar() {
+type TutorialSidebarProps = {
+  tutorial: Tutorial;
+};
+
+export function TutorialSidebar({ tutorial }: TutorialSidebarProps) {
   return (
     <aside className="hidden border-r border-white/10 bg-white/[0.025] lg:block">
-      <div className="sticky top-16 h-[calc(100vh-4rem)] overflow-y-auto px-4 py-6">
-        <p className="mb-3 text-xs font-bold uppercase tracking-widest text-brand-cyan">Tutorials</p>
-        <nav className="grid gap-1">
-          {tutorials.map((tutorial) => (
-            <Link key={tutorial.slug} href={`/tutorials/${tutorial.slug}`} className="focus-ring rounded-md px-3 py-2 text-sm text-white/75 hover:bg-white/10 hover:text-white">
-              {tutorial.language}
+      <div className="h-full overflow-y-auto px-4 py-5 xl:h-[calc(100vh-7.5rem)]">
+        <h2 className="mb-4 text-xl font-normal">{tutorial.language} Tutorial</h2>
+        <nav className="grid gap-1" aria-label={`${tutorial.title} topics`}>
+          <Link href={`/tutorials/${tutorial.slug}`} className="focus-ring rounded-md px-3 py-2 text-sm font-bold text-white/80 hover:bg-white/10 hover:text-white">
+            {tutorial.language} Home
+          </Link>
+          {tutorial.sections.map((section) => (
+            <Link key={section.title} href={`#${tutorialSectionId(section.title)}`} className="focus-ring rounded-md px-3 py-2 text-sm text-white/72 hover:bg-brand-cyan hover:text-brand-ink">
+              {section.title}
             </Link>
           ))}
         </nav>
