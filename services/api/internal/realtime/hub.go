@@ -38,3 +38,9 @@ func (h *Hub) Broadcast(message string) {
 		}
 	}
 }
+
+func (h *Hub) Count() int {
+	h.mu.RLock()
+	defer h.mu.RUnlock()
+	return len(h.clients)
+}
