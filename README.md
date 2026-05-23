@@ -45,6 +45,21 @@ Default local URLs:
 - Web: `http://localhost:3000`
 - API: `http://localhost:8080`
 
+## Domain Architecture
+
+Production should use the Ejicode subdomain ecosystem:
+
+```text
+ejicode.com                -> Main company website
+ejischool.ejicode.com      -> EJISCHOOL learning platform
+api.ejicode.com            -> EJISCHOOL backend API
+playground.ejicode.com     -> Future isolated compiler/playground service
+docs.ejicode.com           -> Future documentation site
+blog.ejicode.com           -> Future blog or CMS
+```
+
+For the current MVP, deploy the frontend at `https://ejischool.ejicode.com` and the Go API at `https://api.ejicode.com`.
+
 ## Verification
 
 Run these before every deployment:
@@ -62,6 +77,7 @@ The CI workflow in `.github/workflows/ci.yml` runs the same web and API checks o
 Copy `.env.example` into your host, CI secret store, or Kubernetes secrets/config and replace every placeholder:
 
 - `NEXT_PUBLIC_API_URL` - public API origin used by the Next.js app.
+- `NEXT_PUBLIC_SITE_URL` - public frontend origin for SEO, sitemap, and canonical URLs.
 - `DATABASE_URL` - production PostgreSQL URL.
 - `JWT_SECRET` - long random signing secret. Do not reuse the local Docker value.
 - `ADMIN_SIGNUP_CODE` - private invite code required to create admin accounts.
@@ -69,6 +85,14 @@ Copy `.env.example` into your host, CI secret store, or Kubernetes secrets/confi
 - `APP_ENV=production` - enables production config validation in the Go API.
 
 In production, the API refuses to boot without `DATABASE_URL`, a real `JWT_SECRET`, and explicit `ALLOWED_ORIGINS`.
+
+Use these domain values for the current deployment:
+
+```bash
+NEXT_PUBLIC_SITE_URL=https://ejischool.ejicode.com
+NEXT_PUBLIC_API_URL=https://api.ejicode.com
+ALLOWED_ORIGINS=https://ejischool.ejicode.com
+```
 
 ## Deployment
 

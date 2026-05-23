@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
 
-const siteUrl = "https://ejischool.com";
+const siteUrl = process.env.NEXT_PUBLIC_SITE_URL ?? "https://ejischool.ejicode.com";
 
 export function pageMetadata(title: string, description: string, path = "/"): Metadata {
   const url = `${siteUrl}${path}`;

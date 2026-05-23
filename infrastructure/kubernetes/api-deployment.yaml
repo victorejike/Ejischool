@@ -118,8 +118,8 @@ kind: ConfigMap
 metadata:
   name: ejischool-config
 data:
-  public-api-url: "https://api.example.com"
-  allowed-origins: "https://example.com,https://www.example.com"
+  public-api-url: "https://api.ejicode.com"
+  allowed-origins: "https://ejischool.ejicode.com"
 ---
 apiVersion: v1
 kind: Secret

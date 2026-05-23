@@ -4,7 +4,7 @@ import { AppShell } from "@/components/layout/AppShell";
 import "./globals.css";
 
 export const metadata: Metadata = {
-  metadataBase: new URL("https://ejischool.com"),
+  metadataBase: new URL(process.env.NEXT_PUBLIC_SITE_URL ?? "https://ejischool.ejicode.com"),
   title: {
     default: "EJISCHOOL - Learn Software Development",
     template: "%s | EJISCHOOL"

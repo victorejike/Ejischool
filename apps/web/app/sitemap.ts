@@ -2,7 +2,7 @@ import type { MetadataRoute } from "next";
 import { tutorials } from "@/data/tutorials";
 
 export default function sitemap(): MetadataRoute.Sitemap {
-  const base = "https://ejischool.com";
+  const base = process.env.NEXT_PUBLIC_SITE_URL ?? "https://ejischool.ejicode.com";
   const routes = ["", "/references", "/exercises", "/certificates", "/playground", "/dashboard", "/pricing", "/blog", "/community", "/login"];
 
   return [
