@@ -14,7 +14,7 @@ jobs:
         with:
           node-version: 20
           cache: npm
-      - run: npm install
+      - run: npm ci
       - run: npm run typecheck
       - run: npm run build
 
@@ -25,4 +25,6 @@ jobs:
       - uses: actions/setup-go@v5
         with:
           go-version: "1.22"
-      - run: cd services/api && go test ./...
+          cache-dependency-path: services/api/go.sum
+      - run: go test ./...
+        working-directory: services/api

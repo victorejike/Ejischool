@@ -7,6 +7,7 @@ import { apiRequest } from "@/lib/api";
 type Session = {
   userId: string;
   email: string;
+  role: string;
   accessToken: string;
   expiresAt: string;
 };
@@ -17,6 +18,7 @@ export function LoginClient() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [role, setRole] = useState("learner");
+  const [adminCode, setAdminCode] = useState("");
   const [status, setStatus] = useState("Ready to connect to the database-backed account system.");
   const [busy, setBusy] = useState(false);
 
@@ -26,10 +28,10 @@ export function LoginClient() {
     try {
       const session = await apiRequest<Session>(mode === "signup" ? "/v1/auth/signup" : "/v1/auth/login", {
         method: "POST",
-        body: JSON.stringify(mode === "signup" ? { name, email, password, role } : { email, password })
+        body: JSON.stringify(mode === "signup" ? { name, email, password, role, adminCode } : { email, password })
       });
       window.localStorage.setItem("ejischool-session", JSON.stringify(session));
-      setStatus(`Signed in as ${session.email}. Session saved on this device.`);
+      setStatus(`Signed in as ${session.email} (${session.role}). Session saved on this device.`);
     } catch (error) {
       setStatus(error instanceof Error ? error.message : "Authentication failed.");
     } finally {
@@ -73,6 +75,12 @@ export function LoginClient() {
               <option value="learner">Learner</option>
               <option value="admin">Admin</option>
             </select>
+          </label>
+        ) : null}
+        {mode === "signup" && role === "admin" ? (
+          <label className="grid gap-2 text-sm font-semibold text-white/80">
+            Admin Code
+            <input className="focus-ring rounded-md border border-white/10 bg-black/20 px-3 py-3 text-white" type="password" value={adminCode} onChange={(event) => setAdminCode(event.target.value)} placeholder="Required for admin accounts" />
           </label>
         ) : null}
         <button className="focus-ring rounded-md bg-brand-cyan px-4 py-3 text-sm font-black text-brand-ink disabled:opacity-60" type="button" disabled={busy} onClick={submit}>

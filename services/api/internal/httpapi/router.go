@@ -2,6 +2,7 @@ package httpapi
 
 import (
 	"context"
+	"crypto/subtle"
 	"database/sql"
 	"encoding/json"
 	"errors"
@@ -42,7 +43,7 @@ func NewRouter(cfg config.Config) http.Handler {
 	app := &api{
 		cfg:       cfg,
 		learning:  learningService,
-		auth:      auth.NewService(cfg.JWTIssuer),
+		auth:      auth.NewService(cfg.JWTIssuer, cfg.JWTSecret),
 		compiler:  playground.NewService(),
 		db:        db,
 		events:    realtime.NewHub(),
@@ -55,6 +56,7 @@ func NewRouter(cfg config.Config) http.Handler {
 	mux.HandleFunc("GET /v1/tutorials/", app.getTutorial)
 	mux.HandleFunc("GET /v1/courses", app.listCourses)
 	mux.HandleFunc("GET /v1/courses/", app.courseBySlug)
+	mux.HandleFunc("PUT /v1/courses/", app.courseBySlug)
 	mux.HandleFunc("GET /v1/events", app.eventsStream)
 	mux.HandleFunc("POST /v1/auth/signup", app.signup)
 	mux.HandleFunc("POST /v1/auth/login", app.login)
@@ -62,7 +64,7 @@ func NewRouter(cfg config.Config) http.Handler {
 	mux.HandleFunc("POST /v1/playground/run", app.runCode)
 	mux.HandleFunc("POST /v1/exercises/submit", app.submitExercise)
 
-	return securityHeaders(cors(mux))
+	return securityHeaders(cors(mux, cfg.AllowedOrigins))
 }
 
 func (a *api) health(w http.ResponseWriter, r *http.Request) {
@@ -155,6 +157,9 @@ func (a *api) getCourse(w http.ResponseWriter, r *http.Request, slug string) {
 }
 
 func (a *api) updateCourse(w http.ResponseWriter, r *http.Request, slug string) {
+	if !a.requireRole(w, r, "admin") {
+		return
+	}
 	if a.db == nil {
 		writeError(w, http.StatusServiceUnavailable, "database is not configured")
 		return
@@ -183,8 +188,17 @@ func (a *api) signup(w http.ResponseWriter, r *http.Request) {
 		writeError(w, http.StatusBadRequest, "invalid json body")
 		return
 	}
+	email := strings.TrimSpace(strings.ToLower(req.Email))
+	if email == "" || req.Password == "" || len(req.Password) < 6 {
+		writeError(w, http.StatusBadRequest, "email and a 6 character password are required")
+		return
+	}
 	if a.db == nil {
-		session, err := a.auth.Login(auth.LoginRequest{Email: req.Email, Password: req.Password})
+		role, ok := a.acceptSignupRole(w, req.Role, req.AdminCode)
+		if !ok {
+			return
+		}
+		session, err := a.auth.Login(auth.LoginRequest{Email: req.Email, Password: req.Password}, role)
 		if err != nil {
 			writeError(w, http.StatusBadRequest, err.Error())
 			return
@@ -192,14 +206,9 @@ func (a *api) signup(w http.ResponseWriter, r *http.Request) {
 		writeJSON(w, http.StatusCreated, session)
 		return
 	}
-	email := strings.TrimSpace(strings.ToLower(req.Email))
-	if email == "" || req.Password == "" || len(req.Password) < 6 {
-		writeError(w, http.StatusBadRequest, "email and a 6 character password are required")
+	role, ok := a.acceptSignupRole(w, req.Role, req.AdminCode)
+	if !ok {
 		return
-	}
-	role := req.Role
-	if role == "" {
-		role = "learner"
 	}
 	hash, err := bcrypt.GenerateFromPassword([]byte(req.Password), bcrypt.DefaultCost)
 	if err != nil {
@@ -219,7 +228,7 @@ func (a *api) signup(w http.ResponseWriter, r *http.Request) {
 		writeError(w, http.StatusInternalServerError, "could not create account")
 		return
 	}
-	session, err := a.auth.Login(auth.LoginRequest{Email: email, Password: req.Password})
+	session, err := a.auth.Login(auth.LoginRequest{Email: email, Password: req.Password}, role)
 	if err != nil {
 		writeError(w, http.StatusBadRequest, err.Error())
 		return
@@ -236,9 +245,9 @@ func (a *api) login(w http.ResponseWriter, r *http.Request) {
 	}
 
 	if a.db != nil {
-		var hash string
+		var hash, role string
 		email := strings.TrimSpace(strings.ToLower(req.Email))
-		err := a.db.QueryRowContext(r.Context(), `SELECT password_hash FROM users WHERE email = $1`, email).Scan(&hash)
+		err := a.db.QueryRowContext(r.Context(), `SELECT password_hash, role FROM users WHERE email = $1`, email).Scan(&hash, &role)
 		if errors.Is(err, sql.ErrNoRows) {
 			writeError(w, http.StatusUnauthorized, "invalid email or password")
 			return
@@ -251,15 +260,64 @@ func (a *api) login(w http.ResponseWriter, r *http.Request) {
 			writeError(w, http.StatusUnauthorized, "invalid email or password")
 			return
 		}
+		session, err := a.auth.Login(req, role)
+		if err != nil {
+			writeError(w, http.StatusUnauthorized, err.Error())
+			return
+		}
+		writeJSON(w, http.StatusOK, session)
+		return
 	}
 
-	session, err := a.auth.Login(req)
+	session, err := a.auth.Login(req, "learner")
 	if err != nil {
 		writeError(w, http.StatusUnauthorized, err.Error())
 		return
 	}
-
 	writeJSON(w, http.StatusOK, session)
+}
+
+func (a *api) acceptSignupRole(w http.ResponseWriter, requested string, adminCode string) (string, bool) {
+	role := strings.TrimSpace(strings.ToLower(requested))
+	if role == "" {
+		role = "learner"
+	}
+	switch role {
+	case "learner":
+		return role, true
+	case "admin":
+		if a.cfg.AdminSignupCode == "" {
+			writeError(w, http.StatusForbidden, "admin signup is disabled")
+			return "", false
+		}
+		if subtle.ConstantTimeCompare([]byte(adminCode), []byte(a.cfg.AdminSignupCode)) != 1 {
+			writeError(w, http.StatusForbidden, "invalid admin signup code")
+			return "", false
+		}
+		return role, true
+	default:
+		writeError(w, http.StatusBadRequest, "unsupported role")
+		return "", false
+	}
+}
+
+func (a *api) requireRole(w http.ResponseWriter, r *http.Request, role string) bool {
+	authHeader := strings.TrimSpace(r.Header.Get("Authorization"))
+	token := strings.TrimSpace(strings.TrimPrefix(authHeader, "Bearer "))
+	if token == "" || token == authHeader {
+		writeError(w, http.StatusUnauthorized, "bearer token is required")
+		return false
+	}
+	claims, err := a.auth.Validate(token)
+	if err != nil {
+		writeError(w, http.StatusUnauthorized, "invalid or expired token")
+		return false
+	}
+	if claims.Role != role {
+		writeError(w, http.StatusForbidden, "insufficient permissions")
+		return false
+	}
+	return true
 }
 
 func (a *api) submitExercise(w http.ResponseWriter, r *http.Request) {
@@ -396,9 +454,13 @@ func writeError(w http.ResponseWriter, status int, message string) {
 	writeJSON(w, status, map[string]string{"error": message})
 }
 
-func cors(next http.Handler) http.Handler {
+func cors(next http.Handler, allowedOrigins []string) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		w.Header().Set("Access-Control-Allow-Origin", "*")
+		origin := r.Header.Get("Origin")
+		if origin != "" && originAllowed(origin, allowedOrigins) {
+			w.Header().Set("Access-Control-Allow-Origin", origin)
+			w.Header().Set("Vary", "Origin")
+		}
 		w.Header().Set("Access-Control-Allow-Headers", "Content-Type, Authorization")
 		w.Header().Set("Access-Control-Allow-Methods", "GET, POST, PUT, OPTIONS")
 		if r.Method == http.MethodOptions {
@@ -407,6 +469,15 @@ func cors(next http.Handler) http.Handler {
 		}
 		next.ServeHTTP(w, r)
 	})
+}
+
+func originAllowed(origin string, allowedOrigins []string) bool {
+	for _, allowed := range allowedOrigins {
+		if allowed == "*" || allowed == origin {
+			return true
+		}
+	}
+	return false
 }
 
 func securityHeaders(next http.Handler) http.Handler {

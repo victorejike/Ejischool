@@ -13,7 +13,7 @@
     "lint": "npm run lint --workspace @ejischool/web",
     "typecheck": "npm run typecheck --workspace @ejischool/web",
     "api:dev": "go run ./services/api/cmd/server",
-    "api:test": "cd services/api && go test ./..."
+    "api:test": "cd services/api && GOCACHE=/tmp/go-build go test ./..."
   },
   "overrides": {
     "csstype": "3.1.3",

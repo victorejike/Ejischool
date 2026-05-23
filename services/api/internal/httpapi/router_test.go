@@ -54,3 +54,29 @@ func TestAITutorRespondsWithProgressContext(t *testing.T) {
 		t.Fatalf("expected answer and next action, got %#v", payload)
 	}
 }
+
+func TestAdminCourseUpdateRequiresBearerToken(t *testing.T) {
+	router := NewRouter(config.Config{Environment: "test", HTTPAddr: ":0", JWTIssuer: "test", JWTSecret: "secret"})
+	body := bytes.NewBufferString(`{"title":"HTML Tutorial","level":"Beginner","description":"Updated"}`)
+	req := httptest.NewRequest(http.MethodPut, "/v1/courses/html", body)
+	rec := httptest.NewRecorder()
+
+	router.ServeHTTP(rec, req)
+
+	if rec.Code != http.StatusUnauthorized {
+		t.Fatalf("expected status 401, got %d", rec.Code)
+	}
+}
+
+func TestAdminSignupRequiresCode(t *testing.T) {
+	router := NewRouter(config.Config{Environment: "test", HTTPAddr: ":0", JWTIssuer: "test", JWTSecret: "secret", AdminSignupCode: "invite"})
+	body := bytes.NewBufferString(`{"email":"admin@example.com","password":"secret1","role":"admin","adminCode":"wrong"}`)
+	req := httptest.NewRequest(http.MethodPost, "/v1/auth/signup", body)
+	rec := httptest.NewRecorder()
+
+	router.ServeHTTP(rec, req)
+
+	if rec.Code != http.StatusForbidden {
+		t.Fatalf("expected status 403, got %d", rec.Code)
+	}
+}
