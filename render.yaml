@@ -1,0 +1,31 @@
+services:
+  - type: web
+    name: ejischool-api
+    runtime: go
+    plan: free
+    rootDir: services/api
+    buildCommand: GOCACHE=/tmp/go-build go build -o bin/ejischool-api ./cmd/server
+    startCommand: ./bin/ejischool-api
+    healthCheckPath: /healthz
+    autoDeploy: true
+    envVars:
+      - key: APP_ENV
+        value: production
+      - key: JWT_ISSUER
+        value: ejischool-api
+      - key: JWT_SECRET
+        generateValue: true
+      - key: ADMIN_SIGNUP_CODE
+        sync: false
+      - key: ALLOWED_ORIGINS
+        sync: false
+      - key: DATABASE_URL
+        fromDatabase:
+          name: ejischool-db
+          property: connectionString
+
+databases:
+  - name: ejischool-db
+    plan: free
+    databaseName: ejischool
+    user: ejischool

@@ -6,3 +6,6 @@
   NODE_VERSION = "20"
   NEXT_IGNORE_INCORRECT_LOCKFILE = "1"
   XDG_CACHE_HOME = "apps/web/.cache"
+
+[[plugins]]
+  package = "@netlify/plugin-nextjs"
