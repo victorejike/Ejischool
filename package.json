@@ -8,10 +8,10 @@
     "packages/*"
   ],
   "scripts": {
-    "dev": "npm run dev --workspace @ejischool/web",
-    "build": "npm run build --workspace @ejischool/web",
-    "lint": "npm run lint --workspace @ejischool/web",
-    "typecheck": "npm run typecheck --workspace @ejischool/web",
+    "dev": "npm --workspace=@ejischool/web run dev",
+    "build": "npm --workspace=@ejischool/web run build",
+    "lint": "npm --workspace=@ejischool/web run lint",
+    "typecheck": "npm --workspace=@ejischool/web run typecheck",
     "api:dev": "go run ./services/api/cmd/server",
     "api:test": "cd services/api && GOCACHE=/tmp/go-build go test ./..."
   },
